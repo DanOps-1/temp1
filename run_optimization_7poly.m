@@ -174,25 +174,25 @@ if exist('ga_results.mat', 'file')
     result_7poly = all_results{best_idx};
 
     subplot(3,1,1);
-    h1 = plot(result_5poly.Plot_X, result_5poly.Phi_Plot, 'b--', 'LineWidth', 1.5); hold on;
-    h2 = plot(result_7poly.Plot_X, result_7poly.Phi_Plot, 'r-', 'LineWidth', 2); hold off;
-    ylabel('角位移 (deg)'); title('槽轮角位移对比');
-    legend([h1,h2], {'五次多项式','七次多项式'}); grid on;
+    plot(result_5poly.Plot_X, result_5poly.Phi_Plot, 'b--', 'LineWidth', 1.5); hold on;
+    plot(result_7poly.Plot_X, result_7poly.Phi_Plot, 'r-', 'LineWidth', 2); hold off;
+    ylabel('角位移 (deg)'); title('槽轮角位移对比 (蓝:五次, 红:七次)');
+    grid on;
     xlim([0 max(result_7poly.Plot_X)+5]);
 
     subplot(3,1,2);
-    h1 = plot(result_5poly.Plot_X, result_5poly.Vel_S, 'b--', 'LineWidth', 1.5); hold on;
-    h2 = plot(result_7poly.Plot_X, result_7poly.Vel_S, 'r-', 'LineWidth', 2); hold off;
-    ylabel('角速度 (rad/s)'); title('槽轮角速度对比');
-    legend([h1,h2], {'五次多项式','七次多项式'}); grid on;
+    plot(result_5poly.Plot_X, result_5poly.Vel_S, 'b--', 'LineWidth', 1.5); hold on;
+    plot(result_7poly.Plot_X, result_7poly.Vel_S, 'r-', 'LineWidth', 2); hold off;
+    ylabel('角速度 (rad/s)'); title('槽轮角速度对比 (蓝:五次, 红:七次)');
+    grid on;
     xlim([0 max(result_7poly.Plot_X)+5]);
 
     subplot(3,1,3);
-    h1 = plot(result_5poly.Plot_X, result_5poly.Acc_S, 'b--', 'LineWidth', 1.5); hold on;
-    h2 = plot(result_7poly.Plot_X, result_7poly.Acc_S, 'r-', 'LineWidth', 2); hold off;
+    plot(result_5poly.Plot_X, result_5poly.Acc_S, 'b--', 'LineWidth', 1.5); hold on;
+    plot(result_7poly.Plot_X, result_7poly.Acc_S, 'r-', 'LineWidth', 2); hold off;
     ylabel('角加速度 (rad/s^2)'); xlabel('圆销转角(°)');
-    title('槽轮角加速度对比');
-    legend([h1,h2], {'五次多项式','七次多项式'}); grid on;
+    title('槽轮角加速度对比 (蓝:五次, 红:七次)');
+    grid on;
     xlim([0 max(result_7poly.Plot_X)+5]);
 
     saveas(fig3, 'poly5_vs_poly7_compare.png');
