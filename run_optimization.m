@@ -190,25 +190,25 @@ end
 fig3 = figure('Color','w','Position',[200 100 1000 800],'Name','优化前后对比');
 
 subplot(3,1,1);
-plot(orig_result.Plot_X, orig_result.Phi_Plot, 'b--', 'LineWidth', 1.5); hold on;
-plot(best_result.Plot_X, best_result.Phi_Plot, 'r-', 'LineWidth', 2);
+h1 = plot(orig_result.Plot_X, orig_result.Phi_Plot, 'b--', 'LineWidth', 1.5); hold on;
+h2 = plot(best_result.Plot_X, best_result.Phi_Plot, 'r-', 'LineWidth', 2); hold off;
 ylabel('角位移 (deg)'); title('槽轮角位移对比');
-legend('优化前','优化后'); grid on;
+legend([h1,h2], {'优化前','优化后'}); grid on;
 xlim([0 max(best_result.Plot_X)+5]);
 
 subplot(3,1,2);
-plot(orig_result.Plot_X, orig_result.Vel_S, 'b--', 'LineWidth', 1.5); hold on;
-plot(best_result.Plot_X, best_result.Vel_S, 'r-', 'LineWidth', 2);
+h1 = plot(orig_result.Plot_X, orig_result.Vel_S, 'b--', 'LineWidth', 1.5); hold on;
+h2 = plot(best_result.Plot_X, best_result.Vel_S, 'r-', 'LineWidth', 2); hold off;
 ylabel('角速度 (rad/s)'); title('槽轮角速度对比');
-legend('优化前','优化后'); grid on;
+legend([h1,h2], {'优化前','优化后'}); grid on;
 xlim([0 max(best_result.Plot_X)+5]);
 
 subplot(3,1,3);
-plot(orig_result.Plot_X, orig_result.Acc_S, 'b--', 'LineWidth', 1.5); hold on;
-plot(best_result.Plot_X, best_result.Acc_S, 'r-', 'LineWidth', 2);
+h1 = plot(orig_result.Plot_X, orig_result.Acc_S, 'b--', 'LineWidth', 1.5); hold on;
+h2 = plot(best_result.Plot_X, best_result.Acc_S, 'r-', 'LineWidth', 2); hold off;
 ylabel('角加速度 (rad/s^2)'); xlabel('圆销转角(°)');
 title('槽轮角加速度对比');
-legend('优化前','优化后'); grid on;
+legend([h1,h2], {'优化前','优化后'}); grid on;
 xlim([0 max(best_result.Plot_X)+5]);
 
 saveas(fig3, 'optimization_compare.png');
