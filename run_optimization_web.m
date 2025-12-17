@@ -12,12 +12,12 @@ fprintf('========================================\n\n');
 lb = [2,  25, -60, 1];    % 下限
 ub = [10, 45, -5,  30];   % 上限
 
-% GA参数（网页版适当减小规模，跑得快点）
-PopSize = 30;        % 种群大小
-MaxGen = 50;         % 迭代次数
+% GA参数（和GPU版一致）
+PopSize = 50;        % 种群大小
+MaxGen = 100;        % 迭代次数
 CrossFrac = 0.9;
 MutRate = 0.05;
-NumRuns = 2;         % 网页版跑2次就够了
+NumRuns = 4;         % 跑4次取最好的
 
 fprintf('GA参数: 种群=%d, 迭代=%d\n', PopSize, MaxGen);
 fprintf('总共跑%d次\n\n', NumRuns);
@@ -124,16 +124,16 @@ saveas(fig1, 'optimized_motion_web.png');
 fprintf('\n运动曲线已保存: optimized_motion_web.png\n');
 
 % 图2: GA收敛曲线
-fig2 = figure('Color','w','Position',[150 100 800 400],'Name','GA收敛曲线');
+fig2 = figure('Color','w','Position',[150 100 1000 600],'Name','GA收敛曲线');
 
 for i = 1:NumRuns
-    subplot(1, NumRuns, i);
+    subplot(2, 2, i);
     h = all_history{i};
     if ~isempty(h.gen)
         plot(h.gen, h.cost, 'k-', 'LineWidth', 1.5);
     end
     xlabel('迭代次数'); ylabel('最优解');
-    title(sprintf('第%d次', i));
+    title(sprintf('(%c) 第%d次', 'a'+i-1, i));
     grid on; xlim([0 MaxGen]);
 end
 
