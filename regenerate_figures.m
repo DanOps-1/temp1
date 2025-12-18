@@ -19,28 +19,28 @@ fig1 = figure('Color','w','Position',[100 50 900 1000],'Name','优化后运动�
 
 ax1 = subplot(3,1,1);
 plot(best_result.Plot_X, best_result.Phi_Plot, 'k-', 'LineWidth', 2);
-ylabel('角位移 (°)', 'FontSize', labelFontSize, 'FontWeight', 'bold');
+ylabel('φ (°)', 'FontSize', labelFontSize, 'FontWeight', 'bold');
 title('(a) 槽轮角位移', 'FontSize', titleFontSize, 'FontWeight', 'bold');
 grid on; xlim([0 max(best_result.Plot_X)+5]);
 set(ax1, 'FontSize', tickFontSize, 'LineWidth', 1);
-set(ax1, 'Position', [0.15 0.71 0.80 0.24]);
+set(ax1, 'Position', [0.12 0.71 0.83 0.24]);
 
 ax2 = subplot(3,1,2);
 plot(best_result.Plot_X, best_result.Vel_S, 'k-', 'LineWidth', 2);
-ylabel('角速度 (rad/s)', 'FontSize', labelFontSize, 'FontWeight', 'bold');
+ylabel('ω (rad/s)', 'FontSize', labelFontSize, 'FontWeight', 'bold');
 title('(b) 槽轮角速度', 'FontSize', titleFontSize, 'FontWeight', 'bold');
 grid on; xlim([0 max(best_result.Plot_X)+5]);
 set(ax2, 'FontSize', tickFontSize, 'LineWidth', 1);
-set(ax2, 'Position', [0.15 0.40 0.80 0.24]);
+set(ax2, 'Position', [0.12 0.40 0.83 0.24]);
 
 ax3 = subplot(3,1,3);
 plot(best_result.Plot_X, best_result.Acc_S, 'k-', 'LineWidth', 2);
-ylabel('角加速度 (rad/s²)', 'FontSize', labelFontSize, 'FontWeight', 'bold');
-xlabel('圆销转角 (°)', 'FontSize', labelFontSize, 'FontWeight', 'bold');
+ylabel('α (rad/s²)', 'FontSize', labelFontSize, 'FontWeight', 'bold');
+xlabel('圆销转角 θ (°)', 'FontSize', labelFontSize, 'FontWeight', 'bold');
 title('(c) 槽轮角加速度', 'FontSize', titleFontSize, 'FontWeight', 'bold');
 grid on; xlim([0 max(best_result.Plot_X)+5]);
 set(ax3, 'FontSize', tickFontSize, 'LineWidth', 1);
-set(ax3, 'Position', [0.15 0.08 0.80 0.24]);
+set(ax3, 'Position', [0.12 0.08 0.83 0.24]);
 
 saveas(fig1, 'optimized_motion.png');
 fprintf('图1已保存: optimized_motion.png\n');
@@ -106,10 +106,12 @@ xlabel('圆销转角 θ (°)', 'FontSize', labelFontSize, 'FontWeight', 'bold');
 title('(c) 槽轮角加速度对比', 'FontSize', titleFontSize, 'FontWeight', 'bold');
 grid on; xlim([0 max(best_result.Plot_X)+5]);
 ylim_val = ylim;
-text(145, ylim_val(1) + (ylim_val(2)-ylim_val(1))*0.92, '— 优化后', 'Color', 'r', 'FontSize', 11, 'FontWeight', 'bold');
-text(145, ylim_val(1) + (ylim_val(2)-ylim_val(1))*0.78, '-- 优化前', 'Color', 'b', 'FontSize', 11, 'FontWeight', 'bold');
+text(150, ylim_val(1) + (ylim_val(2)-ylim_val(1))*0.92, '— 优化后', 'Color', 'r', 'FontSize', 11, 'FontWeight', 'bold');
+text(150, ylim_val(1) + (ylim_val(2)-ylim_val(1))*0.78, '-- 优化前', 'Color', 'b', 'FontSize', 11, 'FontWeight', 'bold');
 set(ax3, 'FontSize', tickFontSize, 'LineWidth', 1);
-set(ax3, 'Position', [0.12 0.08 0.83 0.24]);
+set(ax3, 'Position', [0.16 0.08 0.79 0.24]);
+% 调整Y轴标签位置，避免遮挡
+ax3.YLabel.Position(1) = ax3.YLabel.Position(1) - 5;
 
 saveas(fig3, 'optimization_compare.png');
 fprintf('图3已保存: optimization_compare.png\n');

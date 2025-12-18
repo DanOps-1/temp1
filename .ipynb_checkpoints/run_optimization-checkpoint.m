@@ -1,62 +1,97 @@
-%% 槽轮机构遗传算法优化 - 网页版专用
-% 去掉了GPU、并行计算等网页版不支持的功能
+%% 槽轮机构遗传算法优化
+% 直接在MATLAB里运行这个脚本就行
+% 会自动检测有没有GPU，有就用GPU加速
 
 clc; clear; close all;
 global ga_history_temp;
 
 fprintf('========================================\n');
-fprintf('  槽轮机构遗传算法优化 (网页版)\n');
+fprintf('  槽轮机构遗传算法优化\n');
 fprintf('========================================\n\n');
 
+% 先看看有没有GPU可以用
+gpu_available = false;
+try
+    g = gpuDevice;
+    gpu_available = true;
+    fprintf('[环境] 检测到GPU: %s (显存%.1fGB)\n', g.Name, g.TotalMemory/1e9);
+catch
+    fprintf('[环境] 没检测到GPU，用CPU跑\n');
+end
+
 % 设置参数范围
+% 4个优化变量: G点偏转角、输入行程、速度边界、加速度边界
 lb = [2,  25, -60, 1];    % 下限
 ub = [10, 45, -5,  30];   % 上限
 
-% GA参数（和GPU版一致）
-PopSize = 50;        % 种群大小
-MaxGen = 100;        % 迭代次数
-CrossFrac = 0.9;
-MutRate = 0.05;
+% 遗传算法的参数，按论文表8设的
+PopSize = 50;        % 种群大小，就是每一代有多少个个体
+MaxGen = 100;        % 最多跑100代
+CrossFrac = 0.9;     % 交叉概率90%
+MutRate = 0.05;      % 变异概率5%
 NumRuns = 4;         % 跑4次取最好的
 
-fprintf('GA参数: 种群=%d, 迭代=%d\n', PopSize, MaxGen);
+fprintf('\nGA参数: 种群=%d, 迭代=%d, 交叉=%.2f, 变异=%.2f\n', ...
+    PopSize, MaxGen, CrossFrac, MutRate);
 fprintf('总共跑%d次\n\n', NumRuns);
 
-% 目标函数
-fitness = @(x) geneva_objective(x, false);
+% 选目标函数，有GPU就用GPU版本
+if gpu_available
+    fitness = @(x) geneva_objective_gpu(x, false, true);
+else
+    fitness = @(x) geneva_objective(x, false);
+end
 
-% GA选项（不用并行）
+% 配置GA的选项
 options = optimoptions('ga', ...
     'PopulationSize', PopSize, ...
     'MaxGenerations', MaxGen, ...
     'CrossoverFraction', CrossFrac, ...
-    'EliteCount', 2, ...
-    'FunctionTolerance', 1e-6, ...
-    'Display', 'iter', ...
-    'UseParallel', false, ...
+    'EliteCount', 2, ...           % 每代保留2个最优个体
+    'FunctionTolerance', 1e-6, ... % 收敛精度
+    'Display', 'iter', ...         % 显示迭代过程
     'OutputFcn', @ga_output_callback);
 
-% 存结果
+% 试试能不能开并行，能开就开
+try
+    if isempty(gcp('nocreate'))
+        parpool('local');
+    end
+    options = optimoptions(options, 'UseParallel', true);
+    fprintf('[并行] 并行计算已开启\n\n');
+catch
+    fprintf('[串行] 并行开不了，单线程跑\n\n');
+end
+
+% 准备存结果的变量
 all_params = zeros(NumRuns, 4);
 all_costs = zeros(NumRuns, 1);
 all_results = cell(NumRuns, 1);
 all_history = cell(NumRuns, 1);
 
-% 开始优化
+% 开始优化，跑NumRuns次
 for r = 1:NumRuns
     fprintf('>>> 第%d/%d次优化 <<<\n', r, NumRuns);
 
+    % 清空历史记录
     ga_history_temp = struct('gen', [], 'cost', []);
 
+    % 跑GA
     tic;
     [x_opt, f_opt] = ga(fitness, 4, [], [], [], [], lb, ub, [], options);
     t_elapsed = toc;
 
+    % 存结果
     all_params(r,:) = x_opt;
     all_costs(r) = f_opt;
     all_history{r} = ga_history_temp;
 
-    [~, res] = geneva_objective(x_opt, true);
+    % 拿详细数据，画图要用
+    if gpu_available
+        [~, res] = geneva_objective_gpu(x_opt, true, true);
+    else
+        [~, res] = geneva_objective(x_opt, true);
+    end
     all_results{r} = res;
 
     fprintf('完成! 用时%.1f秒, 目标值=%.2f\n', t_elapsed, f_opt);
@@ -64,12 +99,12 @@ for r = 1:NumRuns
         x_opt(1), x_opt(2), x_opt(3), x_opt(4));
 end
 
-% 找最优
+% 找出最好的那一次
 [best_cost, best_idx] = min(all_costs);
 best_params = all_params(best_idx, :);
 best_result = all_results{best_idx};
 
-% 打印结果
+% 打印结果表格
 fprintf('\n========================================\n');
 fprintf('           优化结果汇总\n');
 fprintf('========================================\n');
@@ -100,14 +135,15 @@ fprintf('  Input_Stroke = %.2f\n', best_params(2));
 fprintf('  v_E          = %.2f\n', best_params(3));
 fprintf('  a_E          = %.2f\n', best_params(4));
 
-%% 画图
+% ========== 画图 ==========
+
+% 图1: 优化后的运动曲线
+fig1 = figure('Color','w','Position',[100 50 900 1000],'Name','优化后运动曲线');
+
 % 字体设置
 titleFontSize = 14;
 labelFontSize = 12;
 tickFontSize = 10;
-
-% 图1: 优化后运动曲线
-fig1 = figure('Color','w','Position',[100 50 900 1000],'Name','优化后运动曲线');
 
 ax1 = subplot(3,1,1);
 plot(best_result.Plot_X, best_result.Phi_Plot, 'k-', 'LineWidth', 2);
@@ -134,8 +170,8 @@ grid on; xlim([0 max(best_result.Plot_X)+5]);
 set(ax3, 'FontSize', tickFontSize, 'LineWidth', 1);
 set(ax3, 'Position', [0.15 0.08 0.80 0.24]);
 
-saveas(fig1, 'optimized_motion_web.png');
-fprintf('\n运动曲线已保存: optimized_motion_web.png\n');
+saveas(fig1, 'optimized_motion.png');
+fprintf('\n运动曲线已保存: optimized_motion.png\n');
 
 % 图2: GA收敛曲线
 fig2 = figure('Color','w','Position',[150 100 1200 750],'Name','GA收敛曲线');
@@ -146,7 +182,7 @@ positions = [0.13 0.58 0.32 0.35;
              0.58 0.10 0.32 0.35];
 
 for i = 1:NumRuns
-    ax = subplot(2, 2, i);
+    ax = subplot(2,2,i);
     h = all_history{i};
     if ~isempty(h.gen)
         plot(h.gen, h.cost/1e5, 'k-', 'LineWidth', 1.5);
@@ -159,14 +195,19 @@ for i = 1:NumRuns
     set(ax, 'Position', positions(i,:));
 end
 
-saveas(fig2, 'ga_convergence_web.png');
-fprintf('收敛曲线已保存: ga_convergence_web.png\n');
+saveas(fig2, 'ga_convergence.png');
+fprintf('收敛曲线已保存: ga_convergence.png\n');
 
 % 图3: 优化前后对比
 fprintf('\n正在生成对比图...\n');
 
+% 原始参数(my.m里的默认值)
 orig_params = [7.5, 40, -30, 9];
-[~, orig_result] = geneva_objective(orig_params, true);
+if gpu_available
+    [~, orig_result] = geneva_objective_gpu(orig_params, true, true);
+else
+    [~, orig_result] = geneva_objective(orig_params, true);
+end
 
 fig3 = figure('Color','w','Position',[200 100 1000 1000],'Name','优化前后对比');
 
@@ -202,25 +243,24 @@ xlabel('圆销转角 θ (°)', 'FontSize', labelFontSize, 'FontWeight', 'bold');
 title('(c) 槽轮角加速度对比', 'FontSize', titleFontSize, 'FontWeight', 'bold');
 grid on; xlim([0 max(best_result.Plot_X)+5]);
 ylim_val = ylim;
-text(150, ylim_val(1) + (ylim_val(2)-ylim_val(1))*0.92, '— 优化后', 'Color', 'r', 'FontSize', 11, 'FontWeight', 'bold');
-text(150, ylim_val(1) + (ylim_val(2)-ylim_val(1))*0.78, '-- 优化前', 'Color', 'b', 'FontSize', 11, 'FontWeight', 'bold');
+text(145, ylim_val(1) + (ylim_val(2)-ylim_val(1))*0.92, '— 优化后', 'Color', 'r', 'FontSize', 11, 'FontWeight', 'bold');
+text(145, ylim_val(1) + (ylim_val(2)-ylim_val(1))*0.78, '-- 优化前', 'Color', 'b', 'FontSize', 11, 'FontWeight', 'bold');
 set(ax3, 'FontSize', tickFontSize, 'LineWidth', 1);
-set(ax3, 'Position', [0.16 0.08 0.79 0.24]);
-ax3.YLabel.Position(1) = ax3.YLabel.Position(1) - 5;
+set(ax3, 'Position', [0.12 0.08 0.83 0.24]);
 
-saveas(fig3, 'optimization_compare_web.png');
-fprintf('对比图已保存: optimization_compare_web.png\n');
+saveas(fig3, 'optimization_compare.png');
+fprintf('对比图已保存: optimization_compare.png\n');
 
 % 保存数据
-save('ga_results_web.mat', 'all_params', 'all_costs', 'best_params', 'best_cost', ...
+save('ga_results.mat', 'all_params', 'all_costs', 'best_params', 'best_cost', ...
     'all_history', 'all_results', 'orig_result', 'best_result');
-fprintf('\n数据已保存: ga_results_web.mat\n');
+fprintf('\n数据已保存: ga_results.mat\n');
 
 fprintf('\n========================================\n');
 fprintf('搞定!\n');
 fprintf('========================================\n');
 
-%% GA回调函数
+% GA的回调函数，用来记录每一代的最优值
 function [state, options, optchanged] = ga_output_callback(options, state, flag)
     global ga_history_temp;
     optchanged = false;
@@ -232,5 +272,6 @@ function [state, options, optchanged] = ga_output_callback(options, state, flag)
             ga_history_temp.gen(end+1) = state.Generation;
             ga_history_temp.cost(end+1) = state.Best(end);
         case 'done'
+            % 结束了，不用干啥
     end
 end

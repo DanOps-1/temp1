@@ -243,10 +243,11 @@ xlabel('圆销转角 θ (°)', 'FontSize', labelFontSize, 'FontWeight', 'bold');
 title('(c) 槽轮角加速度对比', 'FontSize', titleFontSize, 'FontWeight', 'bold');
 grid on; xlim([0 max(best_result.Plot_X)+5]);
 ylim_val = ylim;
-text(145, ylim_val(1) + (ylim_val(2)-ylim_val(1))*0.92, '— 优化后', 'Color', 'r', 'FontSize', 11, 'FontWeight', 'bold');
-text(145, ylim_val(1) + (ylim_val(2)-ylim_val(1))*0.78, '-- 优化前', 'Color', 'b', 'FontSize', 11, 'FontWeight', 'bold');
+text(150, ylim_val(1) + (ylim_val(2)-ylim_val(1))*0.92, '— 优化后', 'Color', 'r', 'FontSize', 11, 'FontWeight', 'bold');
+text(150, ylim_val(1) + (ylim_val(2)-ylim_val(1))*0.78, '-- 优化前', 'Color', 'b', 'FontSize', 11, 'FontWeight', 'bold');
 set(ax3, 'FontSize', tickFontSize, 'LineWidth', 1);
-set(ax3, 'Position', [0.12 0.08 0.83 0.24]);
+set(ax3, 'Position', [0.16 0.08 0.79 0.24]);
+ax3.YLabel.Position(1) = ax3.YLabel.Position(1) - 5;
 
 saveas(fig3, 'optimization_compare.png');
 fprintf('对比图已保存: optimization_compare.png\n');
